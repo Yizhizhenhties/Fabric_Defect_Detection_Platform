@@ -24,17 +24,6 @@
                 <t-icon name="home" />
               </t-button>
             </t-tooltip>
-            <t-tooltip placement="bottom" content="代码仓库">
-              <t-button
-                theme="default"
-                shape="square"
-                variant="text"
-                size="large"
-                style="margin-right: 8px"
-              >
-                <t-icon name="logo-github" />
-              </t-button>
-            </t-tooltip>
             <t-tooltip placement="bottom" content="帮助文档">
               <t-button
                 theme="default"
@@ -42,8 +31,21 @@
                 variant="text"
                 size="large"
                 style="margin-right: 8px"
+                @click="goToHelper"
               >
                 <t-icon name="help-circle" />
+              </t-button>
+            </t-tooltip>
+            <t-tooltip placement="bottom" content="代码仓库">
+              <t-button
+                theme="default"
+                shape="square"
+                variant="text"
+                size="large"
+                style="margin-right: 8px"
+                @click="goToGithub"
+              >
+                <t-icon name="logo-github" />
               </t-button>
             </t-tooltip>
             <t-dropdown
@@ -59,7 +61,10 @@
                   >
                     <t-icon name="time" size="large"></t-icon>历史记录
                   </t-dropdown-item>
-                  <t-dropdown-item class="operations-dropdown-container-item">
+                  <t-dropdown-item
+                    class="operations-dropdown-container-item"
+                    @click="modalvisible = true"
+                  >
                     <t-icon name="poweroff" size="large"></t-icon>退出登录
                   </t-dropdown-item>
                 </t-dropdown-menu>
@@ -98,19 +103,31 @@
           <a
             :style="avtivecolor"
             @mouseover="Mouseover()"
-            @mouseleave="Mouseleave()">
+            @mouseleave="Mouseleave()"
+            @click="goToAboutUs"
+          >
             关于我们
           </a>
           <t-divider layout="vertical" />
           <a
             :style="avtivecolor1"
             @mouseover="Mouseover1()"
-            @mouseleave="Mouseleave1()">
+            @mouseleave="Mouseleave1()"
+            @click="goToContactUs"
+          >
             联系我们
           </a>
         </div>
       </t-footer>
     </t-layout>
+    <t-dialog
+      :visible.sync="modalvisible"
+      theme="info"
+      header="提示"
+      body="是否确定退出登录"
+      @confirm="onConfirm"
+    >
+    </t-dialog>
   </div>
 </template>
 
@@ -132,25 +149,48 @@ export default {
       username: "",
       avtivecolor: "color: black",
       avtivecolor1: "color: black",
+      modalvisible: false,
     };
   },
   methods: {
+    onConfirm() {
+      this.modalvisible = false;
+      sessionStorage.clear()
+      this.$router.push('/')
+    },
     getUserInfo() {
       const that = this;
       if (sessionStorage.getItem("username")) {
         that.username = sessionStorage.getItem("username");
-        sessionStorage.clear();
       } else {
         that.username = "游客";
       }
     },
     goToRecord() {
       const that = this;
-      that.$router.push("record");
+      that.$router.push("history");
     },
     goToHome() {
       const that = this;
       that.$router.push("process");
+    },
+    goToGithub() {
+      const that = this;
+      window.open(
+        "https://github.com/Yizhizhenhties/Fabric_Defect_Detection_Platform"
+      );
+    },
+    goToAboutUs() {
+      const that = this;
+      that.$router.push("aboutus");
+    },
+    goToContactUs() {
+      const that = this;
+      that.$router.push("contactus");
+    },
+    goToHelper() {
+      const that = this;
+      that.$router.push("helper");
     },
     Mouseover() {
       console.log("进入 悬停区域");

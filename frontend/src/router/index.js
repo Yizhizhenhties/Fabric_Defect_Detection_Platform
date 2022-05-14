@@ -26,8 +26,20 @@ export default new Router({
                     component: () => import('../views/process.vue')
                 },
                 {
-                    path: 'record',
-                    component: () => import('../views/record.vue')
+                    path: 'history',
+                    component: () => import('../views/history.vue')
+                },
+                {
+                    path: 'aboutus',
+                    component: () => import('../views/aboutus.vue')
+                },
+                {
+                    path: 'contactus',
+                    component: () => import('../views/contactus.vue')
+                },
+                {
+                    path: 'helper',
+                    component: () => import('../views/helper.vue')
                 }
             ]
         }
