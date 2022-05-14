@@ -1,4 +1,4 @@
-# testvue
+# Fabric_Defect_Detection_Platform_Frontend
 
 > A Vue.js project
 
