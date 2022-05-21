@@ -17,8 +17,13 @@ class GetUserPassword(ApiBaseView):
         return True
 
     def getResult(self, *args, **kwargs) -> Dict[str, T]:
-        user_obj = User.objects.filter(account=self.params['username'])
+        user_obj = User.objects.filter(account=self.params['account'])
+        if user_obj:
+            for item in user_obj:
+                data = {'password': item.password }
+        else:
+            data = {'password', 'error'}
         response_data = getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(),{
-            "data": user_obj
+            "data": data
         })
         return response_data
