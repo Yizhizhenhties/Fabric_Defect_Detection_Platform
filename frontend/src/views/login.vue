@@ -8,47 +8,52 @@
     ></div>
     <div class="login-box">
       <div class="login-container">
-        <t-form
-          :data="formData"
-          ref="form"
-          @submit="onSubmit"
-          :rules="rules"
-          :labelWidth="0"
-        >
-          <t-form-item name="title">
-            <h2 style="margin: auto">登录</h2>
-          </t-form-item>
-          <t-form-item name="account">
-            <t-input
-              clearable
-              v-model="formData.account"
-              placeholder="请输入账户名"
-            >
-              <desktop-icon slot="prefix-icon"></desktop-icon>
-            </t-input>
-          </t-form-item>
-          <t-form-item name="password">
-            <t-input
-              type="password"
-              clearable
-              v-model="formData.password"
-              placeholder="请输入密码"
-            >
-              <lock-on-icon slot="prefix-icon"></lock-on-icon>
-            </t-input>
-          </t-form-item>
-          <t-form-item>
-            <t-button
-              class="submit-button"
-              theme="primary"
-              shape="circle"
-              type="submit"
-            >
-              <icon-font name="arrow-right" />
-            </t-button>
-            <a style="margin-left:auto; color: #2e81f9;" @click="OnUserIn">游客登录 ></a>
-          </t-form-item>
-        </t-form>
+        <t-loading style="margin: auto" :loading="loading" showOverlay>
+          <t-form
+            :data="formData"
+            ref="form"
+            @submit="onSubmit"
+            :rules="rules"
+            :labelWidth="0"
+            :disabled="formdisabled"
+          >
+            <t-form-item name="title">
+              <h2 style="margin: auto">登录</h2>
+            </t-form-item>
+            <t-form-item name="account">
+              <t-input
+                clearable
+                v-model="formData.account"
+                placeholder="请输入账户名"
+              >
+                <desktop-icon slot="prefix-icon"></desktop-icon>
+              </t-input>
+            </t-form-item>
+            <t-form-item name="password">
+              <t-input
+                type="password"
+                clearable
+                v-model="formData.password"
+                placeholder="请输入密码"
+              >
+                <lock-on-icon slot="prefix-icon"></lock-on-icon>
+              </t-input>
+            </t-form-item>
+            <t-form-item>
+              <t-button
+                class="submit-button"
+                theme="primary"
+                shape="circle"
+                type="submit"
+              >
+                <icon-font name="arrow-right" />
+              </t-button>
+              <a style="margin-left: auto; color: #2e81f9" @click="OnUserIn"
+                >游客登录 ></a
+              >
+            </t-form-item>
+          </t-form>
+        </t-loading>
       </div>
     </div>
   </div>
@@ -66,9 +71,9 @@ export default {
   },
   data() {
     return {
-      formData: { 
+      formData: {
         account: "",
-        password: ""
+        password: "",
       },
       allCirle: [
         { class: "left_cir", ani: "left_animate" },
@@ -78,37 +83,73 @@ export default {
         { class: "right_top_cir", ani: "right_top_animate" },
       ],
       rules: {
-        account: [
-          { required: true, message: '账号必填', type: 'error' },
-        ],
+        account: [{ required: true, message: "账号必填", type: "error" }],
         password: [
-          { required: true, message: '密码必填', type: 'error' },
-          { min: 6, message: '请输入 6 位以上密码', type: 'warning' },
-          { pattern: /[A-Z]+/, message: '密码必须包含大写字母', type: 'warning' },
+          { required: true, message: "密码必填", type: "error" },
+          { min: 6, message: "请输入 6 位以上密码", type: "warning" },
+          {
+            pattern: /[A-Z]+/,
+            message: "密码必须包含大写字母",
+            type: "warning",
+          },
         ],
-      }
+      },
+      loading: false,
+      formdisabled: false,
     };
   },
   methods: {
     onSubmit({ validateResult, firstError }) {
+      const that = this;
+      that.loading = true;
+      that.formdisabled = true;
       if (validateResult === true) {
-        if (this.formData.account === "zhenh" && this.formData.password === "Yizhizhenhties") {
-          sessionStorage.setItem('username', this.formData.account)
-          this.$message.success("登录成功")
-          this.$router.push('/index')
-        }
-        else{
-          console.log(this.account)
-          this.$message.warning("登录失败");
-        }
+        that.$http
+          .post("/api/api/pwd/", {
+            params: { account: that.formData.account },
+          })
+          .then((response) => {
+            console.log(response);
+            if (response.data.errcode === 0) {
+              if (response.data.data.password === "error") {
+                this.$message.error("该用户不存在");
+                that.loading = false;
+                that.formdisabled = false;
+              } else {
+                if (response.data.data.password === that.formData.password) {
+                  sessionStorage.setItem("username", this.formData.account);
+                  this.$message.success("登录成功");
+                  that.loading = false;
+                  that.formdisabled = false;
+                  this.$router.push("/index");
+                } else {
+                  this.$message.error("密码错误,请重试");
+                  that.loading = false;
+                  that.formdisabled = false;
+                }
+              }
+            } else {
+              that.$message.error("登陆失败");
+              that.loading = false;
+              that.formdisabled = false;
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+            that.$message.error("登陆失败");
+            that.loading = false;
+            that.formdisabled = false;
+          });
       } else {
         console.log("Errors: ", validateResult);
         this.$message.warning(firstError);
+        that.loading = false;
+        that.formdisabled = false;
       }
     },
     OnUserIn() {
-      this.$router.push('/index')
-    }
+      this.$router.push("/index");
+    },
   },
 };
 </script>
