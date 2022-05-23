@@ -98,6 +98,9 @@ export default {
       formdisabled: false,
     };
   },
+  created() {
+    sessionStorage.clear()
+  },
   methods: {
     onSubmit({ validateResult, firstError }) {
       const that = this;
@@ -106,10 +109,9 @@ export default {
       if (validateResult === true) {
         that.$http
           .post("/api/api/pwd/", {
-            params: { account: that.formData.account },
+            params: { 'account' : that.formData.account },
           })
           .then((response) => {
-            console.log(response);
             if (response.data.errcode === 0) {
               if (response.data.data.password === "error") {
                 this.$message.error("该用户不存在");

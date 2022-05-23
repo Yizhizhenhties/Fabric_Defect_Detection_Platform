@@ -40,6 +40,11 @@ export default new Router({
                 {
                     path: 'helper',
                     component: () => import('../views/helper.vue')
+                },
+                {
+                    path: 'output',
+                    name: 'output',
+                    component: () => import('../views/output.vue')
                 }
             ]
         }
