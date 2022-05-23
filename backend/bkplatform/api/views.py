@@ -50,7 +50,7 @@ class Process(View):
 
     def packResponse(self, data):
         return HttpResponse(json.dumps(data), content_type='application/json')
-
+      
     def post(self, request, *args, **kwargs):
         myFiles = request.FILES.getlist("file", None)
         if not myFiles:
