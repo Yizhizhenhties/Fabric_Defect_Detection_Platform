@@ -193,19 +193,15 @@ export default {
       that.$router.push("helper");
     },
     Mouseover() {
-      console.log("进入 悬停区域");
       this.avtivecolor = "color: #2e81f9"; // 进入 悬停区域,更改文字颜色
     },
     Mouseleave() {
-      console.log("离开 悬停区域");
       this.avtivecolor = "color:black"; // 离开 悬停区域,文字颜色复原
     },
     Mouseover1() {
-      console.log("进入 悬停区域");
       this.avtivecolor1 = "color: #2e81f9"; // 进入 悬停区域,更改文字颜色
     },
     Mouseleave1() {
-      console.log("离开 悬停区域");
       this.avtivecolor1 = "color:black"; // 离开 悬停区域,文字颜色复原
     },
   },
