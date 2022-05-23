@@ -1,5 +1,7 @@
 import imp
 import os
+import base64
+from io import BytesIO
 from PIL import Image
 from django.shortcuts import render
 from django.conf import settings
@@ -39,22 +41,33 @@ class Process(View):
     def __init__(self):
         super(Process, self).__init__()
 
+    def image_to_base64(self, image: Image.Image, fmt='png') -> str:
+        output_buffer = BytesIO()
+        image.save(output_buffer, format=fmt)
+        byte_data = output_buffer.getvalue()
+        base64_str = base64.b64encode(byte_data).decode('utf-8')
+        return f'data:image/{fmt};base64,' + base64_str
+
     def packResponse(self, data):
-        return HttpResponse(json.dumps(data),content_type='application/json')
-    
+        return HttpResponse(json.dumps(data), content_type='application/json')
+      
     def post(self, request, *args, **kwargs):
         myFiles = request.FILES.getlist("file", None)
         if not myFiles:
             return HttpResponse({"errcode": ErrorCodes.API_EXCEPTION.Code(),
                                  "errmsg": ErrorCodes.API_EXCEPTION.Message()},
                                 content_type='application/json')
+        # for myFile in myFiles:
+        #    destination = open(os.path.join(
+        #        "static/image/", myFile.name), 'wb+')
+        #    for chunk in myFile.chunks():
+        #        destination.write(chunk)
+        #    destination.close()
+        base64_img_list = []
         for myFile in myFiles:
-            # 打开特定的文件进行二进制的写操作(有更新，无新建)
-            destination = open(os.path.join(
-                "static/image/", myFile.name), 'wb+')
-            for chunk in myFile.chunks():  # 分块写入文件
-                destination.write(chunk)
-            destination.close()
+            img = Image.open(myFile.file).convert('RGB')
+            base64_img = self.image_to_base64(img)
+            base64_img_list.append(base64_img)
         return self.packResponse(getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(), {
-            "data": ''
+            "data": base64_img_list
         }))
