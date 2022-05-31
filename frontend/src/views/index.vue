@@ -101,6 +101,7 @@
       <t-footer style="align-self: center; height: 8vh">
         <div class="about-us">
           <a
+            class="a"
             :style="avtivecolor"
             @mouseover="Mouseover()"
             @mouseleave="Mouseleave()"
@@ -110,6 +111,7 @@
           </a>
           <t-divider layout="vertical" />
           <a
+            class="a"
             :style="avtivecolor1"
             @mouseover="Mouseover1()"
             @mouseleave="Mouseleave1()"
@@ -250,5 +252,8 @@ export default {
       margin-bottom: 8px;
     }
   }
+}
+.a {
+  cursor: pointer
 }
 </style>
