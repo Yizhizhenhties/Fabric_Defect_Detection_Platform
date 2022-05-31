@@ -44,6 +44,7 @@
           <img v-if="row.has_pro_img" :src="row.path" style="height: 40px" />
           <span v-else>{{ row.path }}</span>
         </template>
+
         <template #report="{ row }">
           <t-button @click="visible = true">{{ row.report }}</t-button>
         </template>
@@ -105,6 +106,7 @@
             />
           </swiper-slide>
           <div class="swiper-pagination" slot="pagination"></div>
+
         </swiper>
       </t-row>
       <t-divider />

@@ -1,3 +1,4 @@
+import os
 import base64
 from io import BytesIO
 from PIL import Image
@@ -50,7 +51,7 @@ class Process(View):
         byte_data = output_buffer.getvalue()
         base64_str = base64.b64encode(byte_data).decode('utf-8')
         return f'data:image/{fmt};base64,' + base64_str
-    
+
     def packResponse(self, data):
         return HttpResponse(json.dumps(data),content_type='application/json')
     
@@ -60,6 +61,7 @@ class Process(View):
             return HttpResponse({"errcode": ErrorCodes.API_EXCEPTION.Code(),
                                  "errmsg": ErrorCodes.API_EXCEPTION.Message()},
                                 content_type='application/json')
+
         now_time = datetime.datetime.now()
         base64_img_list = []
         for myFile in myFiles:
