@@ -38,8 +38,11 @@
           😊 请耐心等待结果 😊
         </div>
         <template #srcimg="{ row }">
-          <!-- <img :src="getObjectURL(row.srcimg)" style="height: 40px" /> -->
           <img :src="row.srcimg" style="height: 40px" />
+        </template>
+        <template #path="{ row }">
+          <img v-if="row.has_pro_img" :src="row.path" style="height: 40px" />
+          <span v-else>{{ row.path }}</span>
         </template>
         <template #report="{ row }">
           <t-button @click="visible = true">{{ row.report }}</t-button>
@@ -85,14 +88,23 @@
       <t-row>
         <h2 style="color: black; margin-left: 40px">检测效果：</h2>
       </t-row>
-      <t-row style="place-content: center">
-        <swiper :options="swiperOption" style="width: 80%; text-align: center">
-          <swiper-slide v-for="(item, index) in imgList" :key="index" style="align-self: center">
-            <img :src="getObjectURL(item.file)" style="width:200px" />
+      <t-row class="swiper-container">
+        <swiper :options="swiperOption" class="swiper">
+          <swiper-slide
+            v-for="(item, index) in pro_imgList"
+            :key="index"
+            class="swiper-slide"
+          >
+            <img
+              :src="item"
+              style="
+                background-position: 50%;
+                background-size: cover;
+                width: 100%;
+              "
+            />
           </swiper-slide>
           <div class="swiper-pagination" slot="pagination"></div>
-          <div class="swiper-button-prev" slot="button-prev"></div>
-          <div class="swiper-button-next" slot="button-next"></div>
         </swiper>
       </t-row>
       <t-divider />
@@ -101,19 +113,19 @@
           <h2 style="color: black; margin-left: 40px">检测总数：</h2>
         </t-col>
         <t-col :span="2">
-          <h3 style="color: black; margin-left: 40px">9张</h3>
+          <h3 style="color: black; margin-left: 40px">{{ num_of_pro }}张</h3>
         </t-col>
         <t-col :span="2">
           <h2 style="color: black; margin-left: 40px">合格产品数量：</h2>
         </t-col>
         <t-col :span="2">
-          <h3 style="color: black; margin-left: 40px">9张</h3>
+          <h3 style="color: black; margin-left: 40px">{{ num_of_true }}张</h3>
         </t-col>
         <t-col :span="2">
           <h2 style="color: black; margin-left: 40px">合格率：</h2>
         </t-col>
         <t-col :span="2">
-          <h3 style="color: black; margin-left: 40px">100%</h3>
+          <h3 style="color: black; margin-left: 40px">{{ rate }}%</h3>
         </t-col>
       </t-row>
       <t-divider />
@@ -130,7 +142,7 @@
       <h3 style="color: black">常见问题：</h3>
       <t-checkbox-group
         v-model="checked"
-        :options="['选项一', '选项二', '选项三']"
+        :options="['纺织品识别错误', '缺陷部位识别错误', '缺陷部位定位不清晰']"
       ></t-checkbox-group>
       <t-divider />
       <h3 style="color: black">文字描述：</h3>
@@ -148,6 +160,7 @@ export default {
       visible: false,
       visible1: false,
       imgList: [],
+      pro_imgList: [],
       loading: true,
       data: [],
       checked: [],
@@ -206,20 +219,24 @@ export default {
       rowKey: "id",
       size: "small",
       swiperOption: {
-        slidesPerView: 3,
+        effect: "coverflow",
+        grabCursor: true,
+        centeredSlides: true,
+        slidesPerView: "auto",
+        coverflowEffect: {
+          rotate: 50,
+          stretch: 0,
+          depth: 100,
+          modifier: 1,
+          slideShadows: true,
+        },
         pagination: {
           el: ".swiper-pagination",
-          clickable: true,
         },
-        navigation: {
-          nextEl: ".swiper-button-next",
-          prevEl: ".swiper-button-prev",
-        },
-        autoplay: {
-          delay: 2000,
-        },
-        loop: true,
       },
+      num_of_pro: 0,
+      num_of_true: 0,
+      rate: 0,
     };
   },
   methods: {
@@ -235,21 +252,33 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         })
         .then((response) => {
-          console.log(response);
           if (response.data.errcode === 0) {
             for (let i = 0; i < response.data.data.length; i++) {
+              if (response.data.data[i].is_fabric) {
+                this.pro_imgList.push(response.data.data[i].heat);
+              }
+              if (response.data.data[i].is_normal === "True") {
+                this.num_of_true += 1;
+              }
               this.data.push({
                 id: i,
-                srcimg: response.data.data[i],
-                processdate: "-",
-                processoutput: "-",
-                path: "-",
+                srcimg: response.data.data[i].src_img,
+                processdate: response.data.data[i].time,
+                processoutput: response.data.data[i].is_normal,
+                path: response.data.data[i].pro_img,
                 report: "查看报告",
+                has_pro_img: response.data.data[i].has_pro_img,
               });
             }
-            if (this.imgList.length < 3) {
-              this.swiperOption.slidesPerView = 1;
-            }
+            // if (this.pro_imgList.length < 3) {
+            //   this.swiperOption.slidesPerView = this.pro_imgList.length;
+            //   console.log(this.swiperOption.slidesPerView)
+            // }
+            this.num_of_pro = this.pro_imgList.length;
+            this.rate =
+              (
+                parseFloat(this.num_of_true) / parseFloat(this.num_of_pro)
+              ).toFixed(2) * 100;
             this.loading = false;
           } else {
             this.$message.error("服务器连接失败");
@@ -258,20 +287,6 @@ export default {
         .catch((error) => {
           this.$message.error("服务器连接失败");
         });
-      // for (let i = 0; i < this.imgList.length; i++) {
-      //   this.data.push({
-      //     id: i,
-      //     srcimg: this.imgList[i].file,
-      //     processdate: "-",
-      //     processoutput: "-",
-      //     path: "-",
-      //     report: "查看报告",
-      //   });
-      // }
-      // if(this.imgList.length < 3){
-      //     this.swiperOption.slidesPerView = 1
-      // }
-      // this.loading = false;
     },
     getObjectURL(file) {
       var url = null;
@@ -322,11 +337,37 @@ export default {
 };
 </script>
 
-<style>
+<style lang="less">
 .output {
   padding: 25px 75px;
   background: #ffffff;
   height: 100%;
 }
-@import "../../../node_modules/swiper/dist/css/swiper.css";
+.swiper-container {
+  width: 100%;
+  height: 200px;
+}
+
+.swiper {
+  height: 100%;
+  width: 100%;
+
+  .swiper-slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 200px;
+    height: 200px;
+    text-align: center;
+    font-weight: bold;
+    background-position: center;
+    background-size: cover;
+  }
+
+  .swiper-pagination {
+    /deep/ .swiper-pagination-bullet.swiper-pagination-bullet-active {
+      background-color: white;
+    }
+  }
+}
 </style>
