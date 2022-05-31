@@ -13,4 +13,4 @@ dist.zip
 *.ntvs*
 *.njsproj
 *.sln
-__pycache__
+*/__pycache__
