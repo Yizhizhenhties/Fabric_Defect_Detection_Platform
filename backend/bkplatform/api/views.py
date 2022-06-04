@@ -1,8 +1,6 @@
 import base64
 from io import BytesIO
 from PIL import Image
-from django.shortcuts import render
-from django.conf import settings
 from utils.common import get_last_month, queryByPage, getResultDict, get_last_date
 from api.models import *
 from api.nn_backend import *
@@ -10,10 +8,12 @@ from utils.error_code import ErrorCodes
 from utils.api_base_view import ApiBaseView
 from typing import Dict, TypeVar
 from django.views import View
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 import json
 import datetime
 from api.EX4 import *
+from django.views.decorators.http import require_http_methods
+import random
 # Create your views here.
 T = TypeVar('T')
 
@@ -97,6 +97,57 @@ class Process(View):
         #    for chunk in myFile.chunks():
         #        destination.write(chunk)
         #    destination.close()
+
+class GetValidateImg(ApiBaseView):
+    def __init__(self):
+        super(GetValidateImg, self).__init__()
+
+    def isParamsValid(self, *args, **kwargs) -> bool:
+        return True
+
+    def image_to_base64(self, image: Image.Image, fmt='png') -> str:
+        output_buffer = BytesIO()
+        image.save(output_buffer, format=fmt)
+        byte_data = output_buffer.getvalue()
+        base64_str = base64.b64encode(byte_data).decode('utf-8')
+        return f'data:image/{fmt};base64,' + base64_str
+
+    def getResult(self, *args, **kwargs) -> Dict[str, T]:
+        validate_obj = ValidateImages.objects.filter()
+        ranint = random.randint(1,len(validate_obj))
+        imgs = validate_obj[ranint-1]
+        right = imgs.right
+        imgs_url = json.loads(imgs.imgurls)
+        data = []
+        for i in range(9):
+            url = imgs_url[str(i+1)]
+            img = Image.open(url[1:]).convert('RGB')
+            img_base64 = self.image_to_base64(img)
+            data.append({
+                'va_img': img_base64
+            })
+        response_data = getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(), {
+            "data": data,
+            "right": right
+        })
+        return response_data
+
+@require_http_methods(['POST'])
+def AddValidateImgs(request: HttpRequest, *args, **kwargs):
+    body = json.loads(request.body)
+    if 'imgs' in body:
+        stringArr = body['imgs']
+        right = '-2'
+        if 'right' in body:
+            right = body['right']
+        va_imgs = ValidateImages(imgurls=stringArr,right=right)
+        va_imgs.save()
+        response = HttpResponse(status=200)
+    else:
+        response = HttpResponse(status=400)  # 参数错误
+    return response
+
+
 
 class exam4(View):
     def __init__(self):

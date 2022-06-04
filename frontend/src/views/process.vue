@@ -92,12 +92,58 @@
           class="process-button"
           theme="primary"
           shape="circle"
-          @click="GoToOutput"
+          @click="showValidate"
         >
           <icon-font name="arrow-right" />
         </t-button>
       </t-col>
     </t-row>
+    <t-dialog
+      :visible.sync="validate_visible"
+      :footer="false"
+      :header="false"
+      :closeBtn="null"
+      placement="center"
+    >
+      <div style="margin-left: 5px">
+        <h2 style="color: black">请选择图中纺织品缺陷部分</h2>
+      </div>
+      <t-loading :loading="validate_loading">
+        <div class="covers">
+          <div class="cover" v-for="(img, index) in imgs" :key="index">
+            <img
+              ref="va_img"
+              :src="img.src"
+              alt=""
+              @click="ChangeValidateList(index)"
+              class="validateimg"
+            />
+            <span
+              ref="mengceng"
+              class="mengceng"
+              style="display: none"
+              @click="ChangeValidateList(index)"
+              >√</span
+            >
+          </div>
+        </div>
+      </t-loading>
+      <div style="margin-top: 20px; float: right">
+        <t-button
+          theme="default"
+          style="margin-right: 5px"
+          :disabled="pass_disabled"
+          @click="PassValidate"
+          >跳过</t-button
+        >
+        <t-button
+          style="margin-right: 5px"
+          :disabled="commit_disabled"
+          @click="GoValidate"
+          >提交</t-button
+        >
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -117,6 +163,33 @@ export default {
       filterList: ["image/gif", "image/jpeg", "image/png", "image/x-icon"],
       //文件总大小
       size: 0,
+      selectedList: [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+      validate_visible: false,
+      validate_loading: false,
+      imgs: [
+        { src: require("../assets/blank.png") },
+        { src: require("../assets/blank.png") },
+        { src: require("../assets/blank.png") },
+        { src: require("../assets/blank.png") },
+        { src: require("../assets/blank.png") },
+        { src: require("../assets/blank.png") },
+        { src: require("../assets/blank.png") },
+        { src: require("../assets/blank.png") },
+        { src: require("../assets/blank.png") },
+      ],
+      pass_disabled: false,
+      commit_disabled: false,
+      right: null,
     };
   },
   methods: {
@@ -172,34 +245,137 @@ export default {
       this.imgList.splice(index, 1);
     },
     GoToOutput() {
-      if (this.imgList.length < 1) {
-        this.$message.error("请至少选择一张图片");
-        return;
-      }
       this.$router.push({
         name: "output",
         params: {
           data: this.imgList,
         },
       });
-      // var imgfilelist = new FormData();
-      // this.imgList.forEach((value, index) => {
-      //   imgfilelist.append("file" , value.file);
-      // });
-      // this.$http
-      //   .post("/api/api/process/", imgfilelist, {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   })
-      //   .then((response) => {
-      //     console.log(response)
-      //     if (response.data.errcode === 0) {
-      //     } else {
-      //       this.$message.error("服务器连接失败");
-      //     }
-      //   })
-      //   .catch((error) => {
-      //     this.$message.error("服务器连接失败");
-      //   });
+    },
+    showValidate() {
+      if (this.imgList.length < 1) {
+        this.$message.error("请至少选择一张图片");
+        return;
+      }
+      if(sessionStorage.getItem("validatecookie") === "true"){
+        this.GoToOutput()
+      }
+      this.validate_visible = true;
+      this.validate_loading = true;
+      this.commit_disabled = true;
+      this.right = null;
+      for (var i = 0; i < this.selectedList.length; i++) {
+        this.selectedList[i] = false;
+      }
+      for (var i = 0; i < this.imgs.length; i++) {
+        this.$refs.va_img[i].style.filter = "";
+        this.$refs.mengceng[i].style.display = "none";
+      }
+      this.$http
+        .post("/api/api/validate/", {
+          params: {},
+        })
+        .then((response) => {
+          if (response.data.errcode === 0) {
+            this.right = response.data.right;
+            for (let i = 0; i < 9; i++) {
+              this.imgs[i].src = response.data.data[i].va_img;
+            }
+            this.validate_loading = false;
+            this.commit_disabled = false;
+          } else {
+            this.$message.error("获取验证码失败");
+            this.validate_loading = false;
+          }
+        })
+        .catch((error) => {
+          this.$message.error("获取验证码失败");
+          this.validate_loading = false;
+        });
+    },
+    PassValidate() {
+      this.validate_loading = true;
+      this.commit_disabled = true;
+      this.right = null;
+      for (var i = 0; i < this.selectedList.length; i++) {
+        this.selectedList[i] = false;
+      }
+      for (var i = 0; i < this.imgs.length; i++) {
+        this.$refs.va_img[i].style.filter = "";
+        this.$refs.mengceng[i].style.display = "none";
+      }
+      this.$http
+        .post("/api/api/validate/", {
+          params: {},
+        })
+        .then((response) => {
+          if (response.data.errcode === 0) {
+            this.right = response.data.right;
+            for (let i = 0; i < 9; i++) {
+              this.imgs[i].src = response.data.data[i].va_img;
+            }
+            this.validate_loading = false;
+            this.commit_disabled = false;
+          } else {
+            this.$message.error("获取验证码失败");
+            this.validate_loading = false;
+          }
+        })
+        .catch((error) => {
+          this.$message.error("获取验证码失败");
+          this.validate_loading = false;
+        });
+    },
+    GoValidate() {
+      if (this.right === "-2") {
+        this.validate_visible = false;
+        this.GoToOutput();
+      }
+      this.validate_loading = true;
+      this.commit_disabled = true;
+      this.pass_disabled = true;
+      let check = [];
+      for (var i = 0; i < this.selectedList.length; i++) {
+        if (this.selectedList[i]) {
+          check.push(i + 1 + "");
+        }
+      }
+      if (check.length === 0) {
+        check.push("-1");
+      }
+      let check_str = check.join("");
+      if (check_str === this.right) {
+        this.validate_loading = false;
+        this.commit_disabled = false;
+        this.pass_disabled = false;
+        this.validate_visible = false;
+        this.$message.success("验证成功");
+        sessionStorage.setItem("validatecookie", "true");
+        this.GoToOutput();
+      } else {
+        this.$message.error("验证失败，请重新选择");
+        this.validate_loading = false;
+        this.commit_disabled = false;
+        this.pass_disabled = false;
+      }
+    },
+    ChangeValidateList(index) {
+      if (this.selectedList[index]) {
+        this.selectedList[index] = false;
+      } else {
+        this.selectedList[index] = true;
+      }
+      for (var i = 0; i < this.imgs.length; i++) {
+        if (i == index) {
+          if (this.selectedList[index]) {
+            this.$refs.va_img[i].style.filter = "opacity(0.7)";
+            this.$refs.mengceng[i].style.display = "";
+          } else {
+            this.$refs.va_img[i].style.filter = "";
+            this.$refs.mengceng[i].style.display = "none";
+          }
+        }
+      }
     },
   },
   computed: {
@@ -348,6 +524,33 @@ export default {
   width: 160px;
   height: 160px;
   opacity: 0;
+  cursor: pointer;
+}
+.covers {
+  height: 400px;
+  widows: 400px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.cover {
+  display: flex;
+  justify-content: center;
+  width: 33%;
+  padding: 3px;
+  align-items: center;
+}
+.mengceng {
+  font-weight: bold;
+  position: absolute;
+  font-size: 28px;
+  color: rgb(45 91 166);
+  cursor: pointer;
+}
+.validateimg {
+  height: 95%;
+  width: 95%;
+  border-radius: 10px;
   cursor: pointer;
 }
 </style>
