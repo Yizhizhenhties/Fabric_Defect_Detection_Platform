@@ -99,7 +99,6 @@ export default {
     };
   },
   created() {
-    sessionStorage.clear()
   },
   methods: {
     onSubmit({ validateResult, firstError }) {
@@ -119,6 +118,7 @@ export default {
                 that.formdisabled = false;
               } else {
                 if (response.data.data.password === that.formData.password) {
+                  sessionStorage.clear()
                   sessionStorage.setItem("username", this.formData.account);
                   this.$message.success("登录成功");
                   that.loading = false;
@@ -150,6 +150,7 @@ export default {
       }
     },
     OnUserIn() {
+      sessionStorage.clear()
       this.$router.push("/index");
     },
   },
