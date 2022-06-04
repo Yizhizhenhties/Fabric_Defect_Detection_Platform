@@ -23,7 +23,6 @@
     </t-row>
     <t-row style="height: 5%" />
     <t-row style="height: 86%">
-
     </t-row>
   </div>
 </template>
@@ -47,5 +46,4 @@ export default {
   background: #ffffff;
   height: 100%;
 }
-
 </style>

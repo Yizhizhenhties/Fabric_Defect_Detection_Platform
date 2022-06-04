@@ -50,7 +50,7 @@ class Process(View):
         byte_data = output_buffer.getvalue()
         base64_str = base64.b64encode(byte_data).decode('utf-8')
         return f'data:image/{fmt};base64,' + base64_str
-    
+
     def packResponse(self, data):
         return HttpResponse(json.dumps(data),content_type='application/json')
     
@@ -146,8 +146,6 @@ def AddValidateImgs(request: HttpRequest, *args, **kwargs):
     else:
         response = HttpResponse(status=400)  # 参数错误
     return response
-
-
 
 class exam4(View):
     def __init__(self):
