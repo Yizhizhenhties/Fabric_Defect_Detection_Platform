@@ -1,3 +1,6 @@
+from distutils.command.upload import upload
+from email.policy import default
+from turtle import right
 from django.db import models
 
 # Create your models here.
@@ -37,3 +40,4 @@ class Feedback(models.Model):
     class Meta:
         verbose_name_plural = verbose_name = '反馈表'
         db_table = 'feedback'
+、

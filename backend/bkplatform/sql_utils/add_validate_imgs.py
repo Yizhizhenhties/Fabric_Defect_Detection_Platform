@@ -43,4 +43,3 @@ if __name__ == '__main__':
             else:
                 print("数据添加失败")
                 print(res.status_code)
-

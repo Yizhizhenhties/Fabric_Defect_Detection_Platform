@@ -184,8 +184,8 @@ class GetHistoryImgs(ApiBaseView):
         super(GetHistoryImgs, self).__init__()
 
     def isParamsValid(self, *args, **kwargs) -> bool:
-        return True
-    
+        return True    
+
     def image_to_base64(self, image: Image.Image, fmt='png') -> str:
         output_buffer = BytesIO()
         image.save(output_buffer, format=fmt)
@@ -239,7 +239,6 @@ def AddValidateImgs(request: HttpRequest, *args, **kwargs):
         response = HttpResponse(status=400)  # 参数错误
     return response
 
-
 class exam4(View):
     def __init__(self):
         super(exam4, self).__init__()
@@ -264,4 +263,3 @@ class exam4(View):
         return self.packResponse(getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(), {
             "data": response_list
         }))
-
