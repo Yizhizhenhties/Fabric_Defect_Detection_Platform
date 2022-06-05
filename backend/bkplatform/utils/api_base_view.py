@@ -49,6 +49,7 @@ class ApiBaseView(View):
         try:
             return self.packResponse(self.getResult(*args, **kwargs))
         except Exception as e:
+            print(e)
             return self.packResponse({"errcode": ErrorCodes.API_EXCEPTION.Code(),
                                       "errmsg": ErrorCodes.API_EXCEPTION.Message()})
 

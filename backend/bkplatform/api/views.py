@@ -14,6 +14,9 @@ import datetime
 from api.EX4 import *
 from django.views.decorators.http import require_http_methods
 import random
+import uuid
+import datetime
+import os
 # Create your views here.
 T = TypeVar('T')
 
@@ -87,16 +90,35 @@ class Process(View):
                     "time": now_time.strftime('%Y-%m-%d %H:%M:%S'),
                     "has_pro_img": False if is_normal else True,
                     "heat": heat
-                }) 
+                })
+        #
+        if 'username' in request.POST:
+            username = request.POST.get("username")
+            dirpath = "static/image/"+str(username)+'/'
+            if not os.path.exists(dirpath):
+                os.mkdir(dirpath)
+            uuid_ = uuid.uuid1()
+            dic = {}
+            length = 0
+            pro_length = 0
+            for img in base64_img_list:
+                if img["is_fabric"]:
+                    file_i_path = os.path.join(dirpath, str(uuid_)+'_'+str(length)+'.png')
+                    dic[length] = file_i_path
+                    b64_data = img["heat"].split(';base64,')[1]
+                    img_decode = base64.b64decode(b64_data)
+                    with open(file_i_path, "wb") as f:
+                        f.write(img_decode)
+                    length += 1
+                    if img["is_normal"] == 'True':
+                        pro_length += 1
+            imgurls = json.dumps(dic)
+            history_obj = History(his_uuid=uuid_,username=username,length=length,pro_length=pro_length,imgurls=imgurls,createtime=datetime.datetime.now(),updatetime=datetime.datetime.now())
+            history_obj.save()
+        # 
         return self.packResponse(getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(), {
             "data": base64_img_list
         }))
-        #for myFile in myFiles:
-        #    destination = open(os.path.join(
-        #        "static/image/", myFile.name), 'wb+')
-        #    for chunk in myFile.chunks():
-        #        destination.write(chunk)
-        #    destination.close()
 
 class GetValidateImg(ApiBaseView):
     def __init__(self):
@@ -132,6 +154,76 @@ class GetValidateImg(ApiBaseView):
         })
         return response_data
 
+class GetHistoryList(ApiBaseView):
+    def __init__(self):
+        super(GetHistoryList, self).__init__()
+
+    def isParamsValid(self, *args, **kwargs) -> bool:
+        return True
+
+    def getResult(self, *args, **kwargs) -> Dict[str, T]:
+        history_obj = History.objects.filter(username=self.params['username'])
+        data = []
+        for item in history_obj:
+            data.append({
+                'uuid': item.his_uuid,
+                'username': item.username,
+                'length': item.length,
+                'pro_length': item.pro_length,
+                'imgurls': item.imgurls,
+                'createtime': item.createtime.strftime('%Y-%m-%d %H:%M:%S'),
+                'updatetime': item.updatetime.strftime('%Y-%m-%d %H:%M:%S')
+            })
+        response_data = getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(), {
+            "data": data
+        })
+        return response_data
+
+class GetHistoryImgs(ApiBaseView):
+    def __init__(self):
+        super(GetHistoryImgs, self).__init__()
+
+    def isParamsValid(self, *args, **kwargs) -> bool:
+        return True
+    
+    def image_to_base64(self, image: Image.Image, fmt='png') -> str:
+        output_buffer = BytesIO()
+        image.save(output_buffer, format=fmt)
+        byte_data = output_buffer.getvalue()
+        base64_str = base64.b64encode(byte_data).decode('utf-8')
+        return f'data:image/{fmt};base64,' + base64_str
+
+    def getResult(self, *args, **kwargs) -> Dict[str, T]:
+        imgurls = self.params['imgurls']
+        length = self.params['length']
+        imgurls = json.loads(imgurls)
+        data = []
+        for i in range(length):
+            img = Image.open(imgurls[str(i)]).convert('RGB')
+            base64_img = self.image_to_base64(img)
+            data.append({
+                'img': base64_img
+            })
+        response_data = getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(), {
+            "data": data
+        })
+        return response_data
+
+class AddFeedback(ApiBaseView):
+    def __init__(self):
+        super(AddFeedback, self).__init__()
+
+    def isParamsValid(self, *args, **kwargs) -> bool:
+        return True
+
+    def getResult(self, *args, **kwargs) -> Dict[str, T]:
+        fb = Feedback(check=self.params['check'],text=self.params['text'])
+        fb.save()
+        response_data = getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(), {
+            "data": {'ok': 'ok'}
+        })
+        return response_data
+
 @require_http_methods(['POST'])
 def AddValidateImgs(request: HttpRequest, *args, **kwargs):
     body = json.loads(request.body)
@@ -146,7 +238,6 @@ def AddValidateImgs(request: HttpRequest, *args, **kwargs):
     else:
         response = HttpResponse(status=400)  # 参数错误
     return response
-
 
 
 class exam4(View):
@@ -173,3 +264,4 @@ class exam4(View):
         return self.packResponse(getResultDict(ErrorCodes.SUCCED.Code(), ErrorCodes.SUCCED.Message(), {
             "data": response_list
         }))
+
