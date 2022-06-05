@@ -7,5 +7,8 @@ urlpatterns = [
     url('process/', views.Process.as_view()),
     url('ex4/', views.exam4.as_view()),
     url('validate/', views.GetValidateImg.as_view()),
-    url('addvalidateimgs/', views.AddValidateImgs
+    url('history/', views.GetHistoryList.as_view()),
+    url('gethistoryimg/', views.GetHistoryImgs.as_view()),
+    url('addfeedback/',views.AddFeedback.as_view()),
+    url('addvalidateimgs/', views.AddValidateImgs)
 ]

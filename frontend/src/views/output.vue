@@ -247,6 +247,9 @@ export default {
       this.imgList.forEach((value, index) => {
         imgfilelist.append("file", value.file);
       });
+      if(sessionStorage.getItem('username')) {
+        imgfilelist.append("username", sessionStorage.getItem('username'))
+      }
       this.$http
         .post("/api/api/process/", imgfilelist, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -270,10 +273,6 @@ export default {
                 has_pro_img: response.data.data[i].has_pro_img,
               });
             }
-            // if (this.pro_imgList.length < 3) {
-            //   this.swiperOption.slidesPerView = this.pro_imgList.length;
-            //   console.log(this.swiperOption.slidesPerView)
-            // }
             this.num_of_pro = this.pro_imgList.length;
             this.rate =
               (
